@@ -12,9 +12,11 @@ target_include_directories (
 
 install (
     TARGETS utility
-    LIBRARY
-        DESTINATION $ENV{PROJECT_BIN_DIR}
-
-    PUBLIC_HEADER
-        DESTINATION $ENV{PROJECT_BIN_DIR}/include
+    DESTINATION $ENV{PROJECT_BIN_DIR}/lib/
 )
+
+file(GLOB headers
+    $ENV{PROJECT_SRC_DIR}/utility/*.hpp)
+
+install (FILES ${headers}
+    DESTINATION $ENV{PROJECT_BIN_DIR}/include/utility/)

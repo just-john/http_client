@@ -22,10 +22,16 @@
 
 # progress
 
-- http client almost complete
-- provide accessors for the request object?
+[x] cmake: fix the install step, it's broken
+
+[x] fix the SSL_R_SHORT_READ issue
+
+[] SNI support
+
+- provide accessors for the request object
+
 - http response todo
-- SNI support
+
 - test the Short read
 - add an agent string
 - add streamout operator to the response object
@@ -35,6 +41,7 @@
     - valgrind
 
 - move onto implementing websockets
+
 
 So at the moment, the client only reads until it is disconnected by the remote endpoint.  This is initially fine, most servers will play nice with this.  But it's not particularly polite for a client to behave in this manner.
 

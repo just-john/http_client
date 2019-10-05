@@ -1,12 +1,14 @@
-#ifndef NANOVERSE_API_HPP
-#define NANOVERSE_API_HPP
+
+#include "nano_requests.hpp"
+
+#include <string>
+#include <sstream>
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/exceptions.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-#include <string>
-#include <sstream>
+#include <utility/logging.hpp>
 
 
 namespace nano::api::request
@@ -29,7 +31,7 @@ std::string account_balance(std::string const & account)
     }
     catch(boost::property_tree::ptree_error const & e)
     {
-        std::cerr << __func__ << ": " << e.what() << "\n";
+        logstream << __func__ << ": " << e.what() << "\n";
     }
 
     return ss.str();
@@ -37,4 +39,3 @@ std::string account_balance(std::string const & account)
 
 }
 
-#endif

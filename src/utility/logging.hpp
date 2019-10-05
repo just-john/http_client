@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+#include "trace.hpp"
+
 namespace web::utility
 {
 

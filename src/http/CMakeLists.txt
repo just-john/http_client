@@ -2,6 +2,7 @@
 set (SOURCE_CODE
     client.cpp
     response.cpp
+    request.cpp
 )
 
 add_library (http STATIC ${SOURCE_CODE})
@@ -24,13 +25,21 @@ target_link_libraries (
 
     PRIVATE
         utility
+        nanoverse
 )
 
 install (
     TARGETS http
     LIBRARY
-        DESTINATION $ENV{PROJECT_BIN_DIR}
+        DESTINATION $ENV{PROJECT_BIN_DIR}/lib/
+)
 
-    PUBLIC_HEADER
-        DESTINATION $ENV{PROJECT_BIN_DIR}/include
+file (
+    GLOB headers
+    $ENV{PROJECT_SRC_DIR}/http/*.hpp
+)
+
+install (
+    FILES ${headers}
+    DESTINATION $ENV{PROJECT_BIN_DIR}/include/http/
 )

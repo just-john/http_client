@@ -4,7 +4,6 @@
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
 #include <boost/asio/streambuf.hpp>
-#include <boost/bind.hpp>
 
 #include <string>
 #include <istream>
@@ -26,8 +25,17 @@ public:
     using response_callback =
         std::function<void(std::unique_ptr<response>)>;
 
+    client(
+        request &                                   req,
+        boost::asio::io_service &                   io,
+        response_callback const &                   response_callback,
+        boost::asio::ssl::context::method const     client_context_method =
+            boost::asio::ssl::context::sslv23_client);
+
+    ~client();
+
 private:
-    request  &                                          request_;
+    request &                                           request_;
 
     boost::asio::io_service &                           io_;
 
@@ -44,7 +52,7 @@ private:
 
     std::unique_ptr<response>                           response_;
 
-private:
+
     void set_handshake_options();
 
     bool on_verify_peer_certificate(
@@ -67,16 +75,6 @@ private:
     void disconnect();
 
     void on_disconnect(boost::system::error_code ec);
-
-public:
-    client(
-        request &                                   req,
-        boost::asio::io_service &                   io,
-        response_callback const &                   response_callback,
-        boost::asio::ssl::context::method const     client_context_method =
-            boost::asio::ssl::context::sslv23_client);
-
-    ~client();
 };
 
 

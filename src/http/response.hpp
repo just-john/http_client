@@ -34,7 +34,7 @@ private:
     int                 body_size_;
     parse_result        parse_result_;
 
-private:
+
     parse_result parse_status_line(std::string const & status_line);
 
 public:

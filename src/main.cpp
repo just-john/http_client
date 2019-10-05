@@ -4,7 +4,7 @@
 #include <stdexcept>
 
 #include "http/client.hpp"
-#include "http/nanoverse_api.hpp"
+#include "nano/api/nanoverse.hpp"
 
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
@@ -34,8 +34,15 @@ void test_https_query()
             io,
             [](std::unique_ptr <http::response> balance_response)
             {
-                balance_response->parse();
-                std::cout << __func__ << "\n" << *balance_response << "\n\n";
+                if (balance_response)
+                {
+                    balance_response->parse();
+                    std::cout << __func__ << "\n" << *balance_response << "\n\n";
+                }
+                else
+                {
+                    std::cout << "smell your ma haha ha, ya cunt ye!\n";
+                }
             }
         );
 

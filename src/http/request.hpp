@@ -1,10 +1,7 @@
-
 #ifndef HTTP_REQUEST_HPP
 #define HTTP_REQUEST_HPP
 
-
 #include <boost/asio/streambuf.hpp>
-#include <memory>
 #include <string>
 
 
@@ -27,35 +24,7 @@ private:
 
     boost::asio::streambuf  buffer_;
 
-    void construct_request()
-    {
-        std::ostream os (&buffer_);
-
-        switch (method_)
-        {
-            case GET:       os << "GET ";     break;
-            case POST:      os << "POST ";    break;
-            case PUT:       os << "PUT ";     break;
-            case DELETE:    os << "DELETE ";  break;
-            default: break;
-        }
-
-        os  << resource_   << " HTTP/1.0\r\n"
-            << "Host: "    << server_ << "\r\n";
-
-        if (body_.length() > 0)
-        {
-            os << "Content-Length: " << body_.length() << "\r\n";
-        }
-
-        os  << "Accept: */*\r\n"
-            << "Connection: close\r\n\r\n";
-
-        if (body_.length() > 0)
-        {
-            os << body_;
-        }
-    }
+    void construct_request();
 
 public:
     request(
@@ -64,27 +33,11 @@ public:
         std::string body        = std::string(),
         method      req_method  = GET,
         protocol    proto       = HTTPS,
-        int         port        = 443)
-    :
-        server_     (std::move(server)),
-        resource_   (std::move(resource)),
-        body_       (std::move(body)),
-        method_     (req_method),
-        protocol_   (proto),
-        port_       (port)
-    {
-        construct_request();
-    }
+        int         port        = 443);
 
-    boost::asio::streambuf & buffer()
-    {
-        return buffer_;
-    }
+    boost::asio::streambuf & buffer();
 
-    std::string const & server() const
-    {
-        return server_;
-    }
+    std::string const & server() const;
 };
 
 }

@@ -43,7 +43,7 @@ std::ostream & operator << (std::ostream & os, response & r)
     if (r.body_size_ > 0)
     {
         os  << "body:\n"
-            << r.response_buffer_.str() << "\n\n";
+            << r.response_buffer_.str() << "\n";
     }
 
     return os;

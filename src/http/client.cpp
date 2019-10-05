@@ -1,17 +1,16 @@
 
 #include "client.hpp"
 
-#include <utility/trace.hpp>
-#include <utility/logging.hpp>
-#include <boost/asio/ssl.hpp>
-#include <boost/asio/ssl/error.hpp>
 #include <stdexcept>
 
+#include <boost/asio/ssl.hpp>
+#include <boost/asio/ssl/error.hpp>
+#include <boost/bind.hpp>
+
 #include <openssl/ssl.h>
-#include <openssl/x509.h>
 #include <openssl/x509_vfy.h>
-#include <openssl/ossl_typ.h>
-#include <openssl/opensslv.h>
+
+#include <utility/logging.hpp>
 
 
 namespace web::http
@@ -72,8 +71,7 @@ void client::set_handshake_options()
         boost::asio::ssl::verify_peer |
         boost::asio::ssl::verify_fail_if_no_peer_cert);
 
-    logstream
-        << "verification against remote host: " << request_.server() << "\n";
+    ssl_context_.set_default_verify_paths();
 
     // ssl_socket_.set_verify_callback(
     //     boost::asio::ssl::rfc2818_verification(request_.server().c_str()));
@@ -84,56 +82,65 @@ void client::set_handshake_options()
 
 bool client::on_verify_peer_certificate(
     bool preverified,
-    boost::asio::ssl::verify_context & ctx
-)
+    boost::asio::ssl::verify_context & ctx)
 {
     STACKTRACE_ME()
 
-    int8_t              subject_name[256];
-    X509_STORE_CTX *    cts     = ctx.native_handle();
+    int8_t subject_name[256];
 
-    X509* cert = X509_STORE_CTX_get_current_cert(ctx.native_handle());
+    X509_STORE_CTX * store_ctx = ctx.native_handle();
 
-    int32_t depth = X509_STORE_CTX_get_error_depth(cts);
-    std::cout << "CTX DEPTH : " << depth << "\n";
+    X509 const * cert = X509_STORE_CTX_get_current_cert(ctx.native_handle());
+
+    int32_t const depth = X509_STORE_CTX_get_error_depth(store_ctx);
+
+    logstream << "context depth : " << depth << "\n";
 
 
-    switch (X509_STORE_CTX_get_error(cts))
+    switch (X509_STORE_CTX_get_error(store_ctx))
     {
     case X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT:
-        logstream << __func__ << ": x509 erorr unable to get issuer certificate\n";
+        logstream
+            << __func__ << ": x509 error unable to get issuer certificate\n";
+        preverified = false;
         break;
 
     case X509_V_ERR_CERT_NOT_YET_VALID:
     case X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD:
-        logstream << __func__ << ": Certificate not yet valid\n";
+        logstream << __func__ << ": x509 certificate is not yet valid\n";
+        preverified = false;
         break;
 
     case X509_V_ERR_CERT_HAS_EXPIRED:
     case X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD:
-        logstream << __func__ << ": Certificate expired\n";
+        logstream << __func__ << ": x509 certificate has expired\n";
+        preverified = false;
         break;
 
     case X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN:
-        logstream << __func__ << ": Self signed certificate in chain\n";
-        preverified = true;
+        logstream << __func__ << ": Self signed x509 certificate in chain\n";
+        // accept self signed certs?
+        // preverified = true;
         break;
 
     default:
-        preverified = true;
         break;
     }
 
-    const int32_t name_length = 256;
+    int32_t const name_length = 256;
 
     X509_NAME_oneline(
         X509_get_subject_name(cert),
-        reinterpret_cast<char*>(subject_name), name_length
-    );
+        reinterpret_cast<char*>(subject_name), name_length);
 
     logstream
-        << __func__ << ": verifying " << subject_name
-        << "\nverification status: " << std::boolalpha << preverified << "\n";
+        << __func__
+        << ": verifying "
+        << subject_name
+        << "\nverification status: "
+        << std::boolalpha
+        << preverified
+        << "\n";
 
     return preverified;
 }
@@ -167,6 +174,9 @@ void client::on_connect(boost::system::error_code ec)
 
     if (! ec)
     {
+        logstream
+            << "tls handshake with remote host: " << request_.server() << "\n";
+
         ssl_socket_.async_handshake(
             boost::asio::ssl::stream_base::client,
             boost::bind(&client::on_handshake, this,
@@ -240,8 +250,8 @@ void client::on_read(boost::system::error_code ec)
                 boost::asio::placeholders::error));
     }
     else if (
-        (ec.category() == boost::asio::error::get_ssl_category()) /*&&
-        (ec.value()    == ERR_PACK(ERR_LIB_SSL, 0, SSL_R_SHORT_READ))*/
+        (ec.category() == boost::asio::error::get_ssl_category()) &&
+        (ec.value()    == boost::asio::ssl::error::stream_truncated)
     )
     {
         disconnect();
