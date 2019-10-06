@@ -67,27 +67,27 @@ private:
     );
 
     void on_resolve(
-        boost::system::error_code                   ec,
+        boost::system::error_code const &           ec,
         boost::asio::ip::tcp::resolver::iterator    endpoint_iterator);
 
-    void on_connect(boost::system::error_code ec);
+    void on_connect(boost::system::error_code const & ec);
 
-    void on_handshake(boost::system::error_code ec);
+    void on_handshake(boost::system::error_code const & ec);
 
-    void on_write(boost::system::error_code ec);
+    void on_write(boost::system::error_code const & ec);
 
-    void on_read(boost::system::error_code ec);
+    void on_read(boost::system::error_code const & ec);
 
     void disconnect();
 
-    void on_disconnect(boost::system::error_code ec);
+    void on_disconnect(boost::system::error_code const & ec);
 
 
     void stop_timer();
 
     void restart_timer();
 
-    void on_timeout(boost::system::error_code ec);
+    void on_timeout(boost::system::error_code const & ec);
 };
 
 

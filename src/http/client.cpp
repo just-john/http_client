@@ -153,7 +153,7 @@ bool client::on_verify_peer_certificate(
 }
 
 void client::on_resolve(
-    boost::system::error_code                   ec,
+    boost::system::error_code const &           ec,
     boost::asio::ip::tcp::resolver::iterator    endpoint_iterator)
 {
     STACKTRACE_ME()
@@ -175,7 +175,7 @@ void client::on_resolve(
     }
 }
 
-void client::on_connect(boost::system::error_code ec)
+void client::on_connect(boost::system::error_code const & ec)
 {
     STACKTRACE_ME()
 
@@ -198,7 +198,7 @@ void client::on_connect(boost::system::error_code ec)
     }
 }
 
-void client::on_handshake(boost::system::error_code ec)
+void client::on_handshake(boost::system::error_code const & ec)
 {
     STACKTRACE_ME()
 
@@ -224,7 +224,7 @@ void client::on_handshake(boost::system::error_code ec)
     }
 }
 
-void client::on_write(boost::system::error_code ec)
+void client::on_write(boost::system::error_code const & ec)
 {
     STACKTRACE_ME()
 
@@ -249,7 +249,7 @@ void client::on_write(boost::system::error_code ec)
     }
 }
 
-void client::on_read(boost::system::error_code ec)
+void client::on_read(boost::system::error_code const & ec)
 {
     STACKTRACE_ME()
 
@@ -296,7 +296,7 @@ void client::disconnect()
             boost::asio::placeholders::error));
 }
 
-void client::on_disconnect(boost::system::error_code ec)
+void client::on_disconnect(boost::system::error_code const & ec)
 {
     STACKTRACE_ME()
 
@@ -334,17 +334,13 @@ void client::stop_timer()
     timeout_timer_.cancel();
 }
 
-void client::on_timeout(boost::system::error_code ec)
+void client::on_timeout(boost::system::error_code const & ec)
 {
-    if (! ec)
+    if (ec != boost::asio::error::operation_aborted)
     {
         logstream << __func__ << "io operation timeout\n";
         disconnect();
     }
-    // else
-    // {
-    //     logstream << __func__ << ": timeout " << ec.message() << "\n";
-    // }
 }
 
 }
