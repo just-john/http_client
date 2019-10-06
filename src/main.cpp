@@ -41,7 +41,7 @@ void test_https_query()
                 }
                 else
                 {
-                    std::cout << "smell your ma haha ha, ya cunt ye!\n";
+                    std::cout << "<insert inappropriate user insult here>\n";
                 }
             }
         );

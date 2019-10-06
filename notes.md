@@ -26,15 +26,15 @@
 
 [x] fix the SSL_R_SHORT_READ issue
 
-[] SNI support
+[x] SNI support
 
-- provide accessors for the request object
+[x] provide accessors for the request object
 
-- http response todo
+[x] add streamout operator to the response object
 
-- test the Short read
-- add an agent string
-- add streamout operator to the response object
+[x] add a timeout timer to the http::client
+
+[] add an agent string
 
 - testing
     - component level testing
@@ -58,6 +58,7 @@ There are a couple of things we can introduce here.
     [x] simple https client
     [] should also be able to handle http
     [] should support chunked encoding response
+
     [x] should use sni if available
-    [] should use http_parser external library
+    [] should use http_parser external library ?
     [] client certificate support

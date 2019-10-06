@@ -65,4 +65,24 @@ std::string const & request::server() const
     return server_;
 }
 
+std::string const & request::resource() const
+{
+    return resource_;
+}
+
+std::string const & request::body() const
+{
+    return body_;
+}
+
+request::method request::get_method() const
+{
+    return method_;
+}
+
+request::protocol request::get_protocol() const
+{
+    return protocol_;
+}
+
 }

@@ -19,7 +19,7 @@ private:
     std::string const       resource_;  // /litecoin?convert=GBP
     std::string const       body_;      //
     method const            method_;    // GET
-    int const               protocol_;  // HTTP
+    protocol const          protocol_;  // HTTP
     int const               port_;      // 443
 
     boost::asio::streambuf  buffer_;
@@ -38,6 +38,16 @@ public:
     boost::asio::streambuf & buffer();
 
     std::string const & server() const;
+
+    std::string const & resource() const;
+
+    std::string const & body() const;
+
+    method get_method() const;
+
+    protocol get_protocol() const;
+
+
 };
 
 }

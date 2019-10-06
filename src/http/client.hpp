@@ -3,6 +3,7 @@
 
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
+#include <boost/system/error_code.hpp>
 #include <boost/asio/streambuf.hpp>
 
 #include <string>
@@ -29,28 +30,33 @@ public:
         request &                                   req,
         boost::asio::io_service &                   io,
         response_callback const &                   response_callback,
+        unsigned                                    timeout_seconds = 10,
         boost::asio::ssl::context::method const     client_context_method =
             boost::asio::ssl::context::sslv23_client);
 
     ~client();
 
 private:
-    request &                                           request_;
+    request &                           request_;
 
-    boost::asio::io_service &                           io_;
+    boost::asio::io_service &           io_;
 
-    response_callback const &                           response_callback_;
+    response_callback const &           response_callback_;
 
-    boost::asio::ssl::context                           ssl_context_;
+    boost::asio::ssl::context           ssl_context_;
 
     boost::asio::ssl::stream <
-        boost::asio::ip::tcp::socket>                   ssl_socket_;
+        boost::asio::ip::tcp::socket>   ssl_socket_;
 
-    boost::asio::streambuf                              buffer_;
+    boost::asio::streambuf              buffer_;
 
-    boost::asio::ip::tcp::resolver                      resolver_;
+    boost::asio::ip::tcp::resolver      resolver_;
 
-    std::unique_ptr<response>                           response_;
+    std::unique_ptr<response>           response_;
+
+    boost::asio::deadline_timer         timeout_timer_;
+
+    unsigned const                      timeout_seconds_;
 
 
     void set_handshake_options();
@@ -75,6 +81,13 @@ private:
     void disconnect();
 
     void on_disconnect(boost::system::error_code ec);
+
+
+    void stop_timer();
+
+    void restart_timer();
+
+    void on_timeout(boost::system::error_code ec);
 };
 
 

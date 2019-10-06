@@ -20,6 +20,7 @@ client::client(
     request &                                   req,
     boost::asio::io_service &                   io,
     response_callback const &                   response_callback,
+    unsigned                                    timeout_seconds,
     boost::asio::ssl::context::method const     client_context_method)
 :
     request_            (req),
@@ -28,13 +29,17 @@ client::client(
     ssl_context_        (client_context_method),
     ssl_socket_         (io_, ssl_context_),
     resolver_           (io_),
-    response_           (response::create())
+    response_           (response::create()),
+    timeout_timer_      (io_),
+    timeout_seconds_    (timeout_seconds)
 {
     STACKTRACE_ME()
 
     set_handshake_options();
 
     boost::asio::ip::tcp::resolver::query query(request_.server(), "https");
+
+    restart_timer();
 
     resolver_.async_resolve(
         query,
@@ -49,13 +54,15 @@ client::~client()
     STACKTRACE_ME()
 }
 
+
+
 void client::set_handshake_options()
 {
     STACKTRACE_ME()
 
-    // Add client side SNI
+    // SNI
     if (! SSL_set_tlsext_host_name(ssl_socket_.native_handle(),
-        request_.server().c_str()))
+            request_.server().c_str()))
     {
         boost::system::error_code ec { static_cast<int>(::ERR_get_error()),
             boost::asio::error::get_ssl_category()
@@ -73,11 +80,11 @@ void client::set_handshake_options()
 
     ssl_context_.set_default_verify_paths();
 
-    // ssl_socket_.set_verify_callback(
-    //     boost::asio::ssl::rfc2818_verification(request_.server().c_str()));
-
     ssl_socket_.set_verify_callback(
         boost::bind(&client::on_verify_peer_certificate, this, _1, _2));
+
+    // ssl_socket_.set_verify_callback(
+    //     boost::asio::ssl::rfc2818_verification(request_.server().c_str()));
 }
 
 bool client::on_verify_peer_certificate(
@@ -195,9 +202,13 @@ void client::on_handshake(boost::system::error_code ec)
 {
     STACKTRACE_ME()
 
+    stop_timer();
+
     if (! ec)
     {
         // send the request
+        restart_timer();
+
         boost::asio::async_write(
             ssl_socket_,
             request_.buffer(),
@@ -217,8 +228,12 @@ void client::on_write(boost::system::error_code ec)
 {
     STACKTRACE_ME()
 
+    stop_timer();
+
     if (! ec)
     {
+        restart_timer();
+
         boost::asio::async_read(
             ssl_socket_,
             buffer_,
@@ -238,11 +253,15 @@ void client::on_read(boost::system::error_code ec)
 {
     STACKTRACE_ME()
 
+    stop_timer();
+
     // copy buffer into response
     response_->consume(buffer_);
 
     if (! ec)
     {
+        restart_timer();
+
         boost::asio::async_read(
             ssl_socket_,
             buffer_,
@@ -269,6 +288,8 @@ void client::disconnect()
 {
     STACKTRACE_ME()
 
+    stop_timer();
+
     ssl_socket_.async_shutdown(
         boost::bind(
             &client::on_disconnect, this,
@@ -294,6 +315,36 @@ void client::on_disconnect(boost::system::error_code ec)
 
     // call the response callback
     response_callback_(std::move(response_));
+}
+
+void client::restart_timer()
+{
+    timeout_timer_.cancel();
+
+    // logstream << __func__ << ": timer restart\n";
+
+    timeout_timer_.expires_from_now(
+        boost::posix_time::seconds(timeout_seconds_));
+
+    timeout_timer_.async_wait(boost::bind(&client::on_timeout, this, _1));
+}
+
+void client::stop_timer()
+{
+    timeout_timer_.cancel();
+}
+
+void client::on_timeout(boost::system::error_code ec)
+{
+    if (! ec)
+    {
+        logstream << __func__ << "io operation timeout\n";
+        disconnect();
+    }
+    // else
+    // {
+    //     logstream << __func__ << ": timeout " << ec.message() << "\n";
+    // }
 }
 
 }
