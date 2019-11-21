@@ -32,7 +32,7 @@ void test_https_query()
         http::client c (
             nano_balance_request,
             io,
-            [](std::unique_ptr <http::response> balance_response)
+            [](std::unique_ptr <http::response> && balance_response)
             {
                 if (balance_response)
                 {
